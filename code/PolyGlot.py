@@ -309,24 +309,31 @@ def fAnnXorSolver():
 
 vTestTab["AnnXorSolver"] = fAnnXorSolver
 
+def fTest(vPathArr: list[str], vPathKey: int = 0, vTestRef = vTestTab):
+
+    if vTestRef:
+
+        if vPathKey == len(vPathArr):
+
+            if isinstance(vTestRef, mType.Callable):
+                vTestRef()
+            else:
+                print(f'not an executable test by path {vPathArr}')
+
+        elif vPathArr[vPathKey] in vTestTab:
+            fTest(vPathArr, vPathKey + 1, vTestTab[vPathArr[vPathKey]])
+        else:
+            print(f'failed to find test by path {vPathArr} with key {vPathKey}')
+
+    else:
+        print(f'failed to find test by path {vPathArr} with key {vPathKey}')
+
+### fTest
 
 # finalize
 
 if __name__ == "__main__":
-    if (vArgV[1] == "test") if (len(vArgV) > 1) else False:
-        if (len(vArgV) > 2):
-            vTestKey = vArgV[2]
-            vTestFun = vTestTab[vArgV[2]]
-            if vTestFun:
-                print(f"{vTestKey}?")
-                vTestFun()
-                print(f"{vTestKey}!")
-            else:
-                print(f"failed to find test by key: {vTestKey}")
-        else:
-            for vTestKey, vTestFun in vTestTab.items():
-                print(f"{vTestKey}?")
-                vTestFun()
-                print(f"{vTestKey}!")
+    if (len(vArgV) > 1):
+        fTest(vArgV[1:], 0, vTestTab)
     else:
-        print(vArgV)
+        print(f'command line arguments are expected - the path to a test function')
