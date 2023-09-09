@@ -24,6 +24,7 @@ vTestTab = {
     },#Graphics
     'GamePlay': {
         'GameOfLife': mGamePlay.fGameOfLife,
+        'SnakEat': mGamePlay.fSnakEat,
     },#GamePlay
     'ArtIntel': {
         'XorSolver': mArtIntel.fXorSolver,

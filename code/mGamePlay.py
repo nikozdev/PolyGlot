@@ -12,6 +12,7 @@ import random
 import pygame
 
 import numpy
+import numpy.typing
 
 # actions
 
@@ -19,22 +20,44 @@ def fGameOfLife():
 
     pygame.init()
 
-    vSize = (64, 64)
-    vScale = 8
+    vDimX: int = 64
+    vDimY: int = 64
+    vDimG: int = vDimX * vDimY
 
-    vScreen = pygame.display.set_mode([vSize[0] * vScale, vSize[1] * vScale])
+    vSize: int = 8
 
-    vNearLiveMin = 2
-    vNearLiveMax = 3
-    vNearMakeMin = 3
-    vNearMakeMax = 3
+    vFaceColor = (96, 144, 96)
+    vBackColor = (16, 16, 16)
 
-    vGrid = numpy.array([[False] * vSize[0]] * vSize[1])
-    vProb = int(math.sqrt(min(vSize)))
-    for vPosY in range(vSize[1]):
-        vLine = vGrid[vPosY]
-        for vPosX in range(vSize[0]):
-            vLine[vPosX] = ((random.randint(0, vProb) % vProb) == 0)
+    vTimeStep: float = 1.0 / 25
+
+    vScreen = pygame.display.set_mode([vDimX * vSize, vDimY * vSize])
+
+    vNearLiveMin: int = 2
+    vNearLiveMax: int = 3
+    vNearMakeMin: int = 3
+    vNearMakeMax: int = 3
+
+    vGrid: list[bool] = [False] * vDimG
+    def fGetPosG(vPosX: int, vPosY: int):
+        return ((vPosY % vDimY) * vDimX) + (vPosX % vDimX)
+    #fGetPosG
+    def fGetNear(vGrid: list[bool], vPosX: int, vPosY: int):
+        vNear: int = 0
+        vNear += int(vGrid[fGetPosG(vPosX - 1, vPosY - 0)])
+        vNear += int(vGrid[fGetPosG(vPosX + 1, vPosY + 0)])
+        vNear += int(vGrid[fGetPosG(vPosX - 0, vPosY - 1)])
+        vNear += int(vGrid[fGetPosG(vPosX + 0, vPosY + 1)])
+        vNear += int(vGrid[fGetPosG(vPosX - 1, vPosY - 1)])
+        vNear += int(vGrid[fGetPosG(vPosX + 1, vPosY - 1)])
+        vNear += int(vGrid[fGetPosG(vPosX + 1, vPosY + 1)])
+        vNear += int(vGrid[fGetPosG(vPosX - 1, vPosY + 1)])
+        return vNear
+    # fGetNear
+
+    vProb: int = int(math.sqrt(min(vDimX, vDimY)))
+    for vPosG in range(vDimG):
+        vGrid[vPosG] = ((random.randint(0, vProb)) == 0)
 
     vWorkFlag = True
     while vWorkFlag:
@@ -44,44 +67,55 @@ def fGameOfLife():
                 case pygame.QUIT: vWorkFlag = False
                 case _: ...
 
-        vScreen.fill((16, 16, 16))
+        vScreen.fill(vBackColor)
 
-        vTemp = vGrid.copy()
-        for vPosY in range(vSize[1]):
+        vTemp: list[bool] = vGrid.copy()
+        for vPosY in range(vDimY):
 
-            vLine = vTemp[vPosY]
-            for vPosX in range(vSize[0]):
+            vOffY: int = vPosY * vDimX
+            for vPosX in range(vDimX):
 
-                vNear = 0
-                vNear += int(vGrid[(vPosY - 0) % vSize[1]][(vPosX - 1) % vSize[0]])
-                vNear += int(vGrid[(vPosY + 0) % vSize[1]][(vPosX + 1) % vSize[0]])
-                vNear += int(vGrid[(vPosY - 1) % vSize[1]][(vPosX - 0) % vSize[0]])
-                vNear += int(vGrid[(vPosY + 1) % vSize[1]][(vPosX + 0) % vSize[0]])
-                vNear += int(vGrid[(vPosY - 1) % vSize[1]][(vPosX - 1) % vSize[0]])
-                vNear += int(vGrid[(vPosY - 1) % vSize[1]][(vPosX + 1) % vSize[0]])
-                vNear += int(vGrid[(vPosY + 1) % vSize[1]][(vPosX + 1) % vSize[0]])
-                vNear += int(vGrid[(vPosY + 1) % vSize[1]][(vPosX - 1) % vSize[0]])
+                vPosG: int = vOffY + vPosX
+                vNear: int = fGetNear(vGrid, vPosX, vPosY)
 
-                if vLine[vPosX]:
-
-                    vLine[vPosX] = (vNear >= vNearLiveMin) & (vNear <= vNearLiveMax)
-
+                if vTemp[vPosG]:
+                    vTemp[vPosG] = (vNear >= vNearLiveMin) & (vNear <= vNearLiveMax)
                 else:
+                    vTemp[vPosG] = (vNear >= vNearMakeMin) & (vNear <= vNearMakeMax)
 
-                    vLine[vPosX] = (vNear >= vNearMakeMin) & (vNear <= vNearMakeMax)
+                if vTemp[vPosG]:
 
-                if vLine[vPosX]:
-
-                    vRectSize = max(vScale - 1, 1)
-                    vRectPosX = vPosX * vScale
-                    vRectPosY = vPosY * vScale
+                    vRectSize = max(vSize - 1, 1) # i wanna c deez lil cells
+                    vRectPosX = vPosX * vSize
+                    vRectPosY = vPosY * vSize
                     vRect = pygame.Rect(vRectPosX, vRectPosY, vRectSize, vRectSize)
-                    pygame.draw.rect(vScreen, (96, 144, 96), vRect)
+
+                    pygame.draw.rect(vScreen, vFaceColor, vRect)
 
         vGrid = vTemp
+
         pygame.display.flip()
-        time.sleep(0.5)
+        time.sleep(vTimeStep)
 
     pygame.quit()
 
 ## fGameOfLife
+
+def fSnakEat():
+
+    pygame.init()
+
+    vDimX: int = 64
+    vDimY: int = 64
+    vSize: int = 8
+
+    vWorkFlag: bool = True
+    while vWorkFlag:
+        pygame.display.flip()
+        time.sleep(0.5)
+
+    vScreen = pygame.display.set_mode([vDimX * vSize, vDimY * vSize])
+
+    pygame.quit()
+
+## fSnakEat
