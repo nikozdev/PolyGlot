@@ -4,14 +4,13 @@
 
 import random
 
-## external
-
-import matplotlib
-import matplotlib.pyplot
-
 # actions
 
 def fPlotLinear():
+
+    import matplotlib
+    import matplotlib.pyplot
+
     vFigure = matplotlib.pyplot.figure()
     vSuplot = vFigure.add_subplot()
 

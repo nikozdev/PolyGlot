@@ -28,6 +28,7 @@ vTestTab = {
     },#GamePlay
     'ArtIntel': {
         'XorSolver': mArtIntel.fXorSolver,
+        'DigitReader': mArtIntel.fDigitReaderFromKeras,
     },#ArtIntel
 }
 
