@@ -43,7 +43,7 @@ class tLayerDense(tLayer):
 
     def fAhead(self, vIput: numpy.typing.NDArray[numpy.float64]):
 
-        self.vIput = vIput.copy()
+        self.vIput = vIput
         
         return numpy.dot(self.vEdge, self.vIput) + self.vBias
 
@@ -83,7 +83,7 @@ class tLayerActiv(tLayer):
 
     def fAhead(self, vIput: numpy.typing.NDArray[numpy.float64]):
 
-        self.vIput = vIput.copy()
+        self.vIput = vIput
 
         return self.fActiv(vIput)
 
@@ -132,7 +132,7 @@ class tLayerActivRelu(tLayerActiv):
 
     def __init__(self, vIdim: int):
 
-        vRate: float = 0.01
+        vRate: float = 0.1
 
         def fActiv(vIput: numpy.typing.NDArray):
 
@@ -185,10 +185,14 @@ class tGraph():
     # getters
 
     def fGetCost(self, vOput: numpy.typing.NDArray, vNeed: numpy.typing.NDArray):
-        return numpy.mean(numpy.power(vOput - vNeed, 2.0))
+        return numpy.mean(vOput - vNeed)
+        #return numpy.mean(numpy.power(vOput - vNeed, 2.0))
+        #return numpy.mean(-vNeed * numpy.log(vOput) - (1 - vNeed) * numpy.log(1 - vOput))
 
     def fGetCostPrime(self, vOput: numpy.typing.NDArray, vNeed: numpy.typing.NDArray):
-        return (2.0 * (vOput - vNeed)) / numpy.size(vNeed)
+        return (vOput - vNeed) / numpy.size(vNeed)
+        #return (2.0 * (vOput - vNeed)) / numpy.size(vNeed)
+        #return ((1 - vNeed) / (1 - vOput) - vNeed / vOput) / numpy.size(vNeed)
 
     # actions
 
@@ -227,7 +231,7 @@ class tGraph():
 
 def fXorSolver():
 
-    '''
+    #'''
     vGraph = tGraph([
         tLayerDense(2, 3, 0.1),
         tLayerActivTanh(3),
@@ -235,12 +239,12 @@ def fXorSolver():
         tLayerActivTanh(1),
     ])
     #'''
-    #'''
+    '''
     vGraph = tGraph([
-        tLayerDense(2, 3, 0.1),
+        tLayerActivRelu(2),
+        tLayerDense(2, 3, 0.01),
         tLayerActivRelu(3),
-        tLayerDense(3, 1, 0.1),
-        tLayerActivRelu(1),
+        tLayerDense(3, 1, 0.01),
     ])
     #'''
 
@@ -471,29 +475,32 @@ def fDigitReaderFromKeras():
     vLayerOputSize: int = int(numpy.sqrt(vGraphIputSize))
     #'''
     vGraph = tGraph([
-        tLayerDense(vGraphIputSize, vLayerOputSize, 0.05),
+        tLayerDense(vGraphIputSize, vLayerOputSize, vRate = 0.030111),
         tLayerActivTanh(vLayerOputSize),
-        tLayerDense(vLayerOputSize, vGraphOputSize, 0.05),
+        tLayerDense(vLayerOputSize, vGraphOputSize, vRate = 0.030111),
         tLayerActivTanh(vGraphOputSize),
     ])
     #'''
     '''
     vGraph = tGraph([
-        tLayerDense(vGraphIputSize, vLayerOputSize, 0.0001),
+        tLayerDense(vGraphIputSize, vLayerOputSize, 0.001),
         tLayerActivRelu(vLayerOputSize),
-        tLayerDense(vLayerOputSize, vGraphOputSize, 0.0001),
+        tLayerDense(vLayerOputSize, vGraphOputSize, 0.001),
         tLayerActivRelu(vGraphOputSize),
     ])
     #'''
 
-    for vIrep in range(3):
+    vRepsCount: int = 10
+    for vIrep in range(vRepsCount):
+
+        vCost = numpy.reshape([[0.0]], (1, 1))
 
         for vIter in range(vLearnSize):
 
-            vCost = vGraph.fLearn(vLearnIput[vIter], vLearnOput[vIter])
+            vCost += vGraph.fLearn(vLearnIput[vIter], vLearnOput[vIter])
 
-            if vIter % 1000 == 0:
-                print(f'{vIter}/{vLearnSize}={vCost}')
+        vCost /= len(vLearnIput)
+        print(f'[{vIrep}/{vRepsCount}]={vCost}')
 
     vTrialSize: int = vTrialIput.shape[0]
     vTrialIput, vTrialOput = fProcData(vTrialIput, vTrialOput, vTrialSize)
