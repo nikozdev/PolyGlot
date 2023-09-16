@@ -10,13 +10,11 @@ import random
 import enum
 import copy
 
-## external
-
-import pygame
-
 # actions
 
 def fGameOfLife():
+
+    import pygame
 
     # consdef
 
@@ -109,6 +107,8 @@ def fGameOfLife():
 ## fGameOfLife
 
 def fSnakEat():
+
+    import pygame
 
     pygame.init()
 
